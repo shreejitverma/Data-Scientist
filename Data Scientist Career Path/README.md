@@ -3707,16 +3707,5 @@ Let’s get started!
 
 </details>
 
-</details>
-
----
-
-<details><summary>Certificate 📃</summary>
-
-<p align="center">
-  <img src="Data%20Scientist%20Career%20Path/Certificate.png">
-</p>
-
-</details>
 
 ---
