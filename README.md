@@ -6,6 +6,112 @@ This is a shortcut path to start studying **Data Science**. Just follow the step
 
 Everything that you will need on Data Science
 
+## What is Data Science?
+
+Data Science is one of the hottest topics on the Computer and Internet farmland nowadays. People have gathered data from applications and systems until today and now is the time to analyze them. The next steps are producing suggestions from the data and creating predictions about the future. [Here](https://www.quora.com/Data-Science/What-is-data-science) you can find the biggest question for **Data Science** and hundreds of answers from experts.
+
+| Link | Preview |
+| --- | --- |
+| [What is Data Science @ O'reilly](https://www.oreilly.com/ideas/what-is-data-science) | *Data scientists combine entrepreneurship with patience, the willingness to build data products incrementally, the ability to explore, and the ability to iterate over a solution. They are inherently interdisciplinary. They can tackle all aspects of a problem, from initial data collection and data conditioning to drawing conclusions. They can think outside the box to come up with new ways to view the problem, or to work with very broadly defined problems: “here’s a lot of data, what can you make from it?”* |
+| [What is Data Science @ Quora](https://www.quora.com/Data-Science/What-is-data-science) | Data Science is a combination of a number of aspects of Data such as Technology, Algorithm development, and data interference to study the data, analyse it, and find innovative solutions to difficult problems. Basically Data Science is all about Analysing data and driving for business growth by finding creative ways. |
+| [The sexiest job of 21st century](https://hbr.org/2012/10/data-scientist-the-sexiest-job-of-the-21st-century) | *Data scientists today are akin to Wall Street “quants” of the 1980s and 1990s. In those days people with backgrounds in physics and math streamed to investment banks and hedge funds, where they could devise entirely new algorithms and data strategies. Then a variety of universities developed master’s programs in financial engineering, which churned out a second generation of talent that was more accessible to mainstream firms. The pattern was repeated later in the 1990s with search engineers, whose rarefied skills soon came to be taught in computer science programs.* |
+| [Wikipedia](https://en.wikipedia.org/wiki/Data_science) | *Data science is an inter-disciplinary field that uses scientific methods, processes, algorithms and systems to extract knowledge and insights from many structural and unstructured data. Data science is related to data mining, machine learning and big data.* |
+| [How to Become a Data Scientist](https://www.mastersindatascience.org/careers/data-scientist/) | *Data scientists are big data wranglers, gathering and analyzing large sets of structured and unstructured data. A data scientist’s role combines computer science, statistics, and mathematics. They analyze, process, and model data then interpret the results to create actionable plans for companies and other organizations.* |
+| [a very short history of #datascience](https://www.forbes.com/sites/gilpress/2013/05/28/a-very-short-history-of-data-science/) | *The story of how data scientists became sexy is mostly the story of the coupling of the mature discipline of statistics with a very young one--computer science.  The term “Data Science” has emerged only recently to specifically designate a new profession that is expected to make sense of the vast stores of big data. But making sense of data has a long history and has been discussed by scientists, statisticians, librarians, computer scientists and others for years. The following timeline traces the evolution of the term “Data Science” and its use, attempts to define it, and related terms.* |
+
+## Learn Data Science
+
+Our favorite programming language is *Python* nowadays for #DataScience. Python's - [Pandas](https://pandas.pydata.org/) library has full functionalities for collecting and analyzing data. We use [Anaconda](https://www.anaconda.com) to play with data and to create applications.
+
+- [Algorithms](#algorithms)
+- [Colleges](#colleges)
+- [MOOC's](#moocs)
+- [Podcasts](#podcasts)
+- [Books](#books)
+- [YouTube Videos & Channels](#youtube-videos--channels)
+- [Toolboxes - Environment](#toolboxes---environment)
+- [Journals, Publications and Magazines](#journals-publications-and-magazines)
+- [Presentations](#presentations)
+- [Tutorials](#tutorials)
+
+## Algorithms
+
+These are some Machine Learning and Data Mining algorithms and models help you to understand your data and derive meaning from it.
+
+### Supervised Learning
+
+- Regression
+- Linear Regression
+- Ordinary Least Squares
+- Logistic Regression
+- Stepwise Regression
+- Multivariate Adaptive Regression Splines
+- Locally Estimated Scatterplot Smoothing
+- Classification
+  - k-nearest neighbor
+  - Support Vector Machines
+  - Decision Trees
+  - ID3 algorithm
+  - C4.5 algorithm
+- Ensemble Learning
+- Boosting
+- Bagging
+- Random Forest
+- AdaBoost
+
+### Unsupervised Learning
+
+- Clustering
+  - Hierchical clustering
+  - k-means
+  - Fuzzy clustering
+  - Mixture models
+- Dimension Reduction
+  - Principal Component Analysis (PCA)
+  - t-SNE
+- Neural Networks
+- Self-organizing map
+- Adaptive resonance theory
+- Hidden Markov Models (HMM)
+
+### Semi-Supervised Learning
+
+- S3VM
+- Clustering
+- Generative models
+- Low-density separation
+- Laplacian regularization
+- Heuristic approaches
+
+### Reinforcement Learning
+
+- Q Learning
+- SARSA (State-Action-Reward-State-Action) algorithm
+- Temporal difference learning
+
+### Data Mining Algorithms
+
+- C4.5
+- k-Means
+- SVM
+- Apriori
+- EM
+- PageRank
+- AdaBoost
+- kNN
+- Naive Bayes
+- CART
+
+### Deep Learning architectures
+
+- Multilayer Perceptron
+- Convolutional Neural Network (CNN)
+- Recurrent Neural Network (RNN)
+- Boltzmann Machines
+- Autoencoder
+- Generative Adversarial Network (GAN)
+- Self-Organized Maps
+
 <br>
 
 # Contents
@@ -1146,113 +1252,6 @@ A trove of carefully curated resources and links (on the topics of software, pla
 
 
 
-## What is Data Science?
-
-Data Science is one of the hottest topics on the Computer and Internet farmland nowadays. People have gathered data from applications and systems until today and now is the time to analyze them. The next steps are producing suggestions from the data and creating predictions about the future. [Here](https://www.quora.com/Data-Science/What-is-data-science) you can find the biggest question for **Data Science** and hundreds of answers from experts.
-
-| Link | Preview |
-| --- | --- |
-| [What is Data Science @ O'reilly](https://www.oreilly.com/ideas/what-is-data-science) | *Data scientists combine entrepreneurship with patience, the willingness to build data products incrementally, the ability to explore, and the ability to iterate over a solution. They are inherently interdisciplinary. They can tackle all aspects of a problem, from initial data collection and data conditioning to drawing conclusions. They can think outside the box to come up with new ways to view the problem, or to work with very broadly defined problems: “here’s a lot of data, what can you make from it?”* |
-| [What is Data Science @ Quora](https://www.quora.com/Data-Science/What-is-data-science) | Data Science is a combination of a number of aspects of Data such as Technology, Algorithm development, and data interference to study the data, analyse it, and find innovative solutions to difficult problems. Basically Data Science is all about Analysing data and driving for business growth by finding creative ways. |
-| [The sexiest job of 21st century](https://hbr.org/2012/10/data-scientist-the-sexiest-job-of-the-21st-century) | *Data scientists today are akin to Wall Street “quants” of the 1980s and 1990s. In those days people with backgrounds in physics and math streamed to investment banks and hedge funds, where they could devise entirely new algorithms and data strategies. Then a variety of universities developed master’s programs in financial engineering, which churned out a second generation of talent that was more accessible to mainstream firms. The pattern was repeated later in the 1990s with search engineers, whose rarefied skills soon came to be taught in computer science programs.* |
-| [Wikipedia](https://en.wikipedia.org/wiki/Data_science) | *Data science is an inter-disciplinary field that uses scientific methods, processes, algorithms and systems to extract knowledge and insights from many structural and unstructured data. Data science is related to data mining, machine learning and big data.* |
-| [How to Become a Data Scientist](https://www.mastersindatascience.org/careers/data-scientist/) | *Data scientists are big data wranglers, gathering and analyzing large sets of structured and unstructured data. A data scientist’s role combines computer science, statistics, and mathematics. They analyze, process, and model data then interpret the results to create actionable plans for companies and other organizations.* |
-| [a very short history of #datascience](https://www.forbes.com/sites/gilpress/2013/05/28/a-very-short-history-of-data-science/) | *The story of how data scientists became sexy is mostly the story of the coupling of the mature discipline of statistics with a very young one--computer science.  The term “Data Science” has emerged only recently to specifically designate a new profession that is expected to make sense of the vast stores of big data. But making sense of data has a long history and has been discussed by scientists, statisticians, librarians, computer scientists and others for years. The following timeline traces the evolution of the term “Data Science” and its use, attempts to define it, and related terms.* |
-
-## Learn Data Science
-
-Our favorite programming language is *Python* nowadays for #DataScience. Python's - [Pandas](https://pandas.pydata.org/) library has full functionalities for collecting and analyzing data. We use [Anaconda](https://www.anaconda.com) to play with data and to create applications.
-
-- [Algorithms](#algorithms)
-- [Colleges](#colleges)
-- [MOOC's](#moocs)
-- [Podcasts](#podcasts)
-- [Books](#books)
-- [YouTube Videos & Channels](#youtube-videos--channels)
-- [Toolboxes - Environment](#toolboxes---environment)
-- [Journals, Publications and Magazines](#journals-publications-and-magazines)
-- [Presentations](#presentations)
-- [Tutorials](#tutorials)
-
-## Algorithms
-
-
-
-These are some Machine Learning and Data Mining algorithms and models help you to understand your data and derive meaning from it.
-
-### Supervised Learning
-
-- Regression
-- Linear Regression
-- Ordinary Least Squares
-- Logistic Regression
-- Stepwise Regression
-- Multivariate Adaptive Regression Splines
-- Locally Estimated Scatterplot Smoothing
-- Classification
-  - k-nearest neighbor
-  - Support Vector Machines
-  - Decision Trees
-  - ID3 algorithm
-  - C4.5 algorithm
-- Ensemble Learning
-- Boosting
-- Bagging
-- Random Forest
-- AdaBoost
-
-### Unsupervised Learning
-
-- Clustering
-  - Hierchical clustering
-  - k-means
-  - Fuzzy clustering
-  - Mixture models
-- Dimension Reduction
-  - Principal Component Analysis (PCA)
-  - t-SNE
-- Neural Networks
-- Self-organizing map
-- Adaptive resonance theory
-- Hidden Markov Models (HMM)
-
-### Semi-Supervised Learning
-
-- S3VM
-- Clustering
-- Generative models
-- Low-density separation
-- Laplacian regularization
-- Heuristic approaches
-
-### Reinforcement Learning
-
-- Q Learning
-- SARSA (State-Action-Reward-State-Action) algorithm
-- Temporal difference learning
-
-### Data Mining Algorithms
-
-- C4.5
-- k-Means
-- SVM
-- Apriori
-- EM
-- PageRank
-- AdaBoost
-- kNN
-- Naive Bayes
-- CART
-
-### Deep Learning architectures
-
-- Multilayer Perceptron
-- Convolutional Neural Network (CNN)
-- Recurrent Neural Network (RNN)
-- Boltzmann Machines
-- Autoencoder
-- Generative Adversarial Network (GAN)
-- Self-Organized Maps
 
 ## COLLEGES
 
