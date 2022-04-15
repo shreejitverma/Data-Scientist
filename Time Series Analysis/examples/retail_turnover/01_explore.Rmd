@@ -1,0 +1,140 @@
+---
+title: "Using Tidyverts with the Australian retail data: introduction and exploration"
+output: html_notebook
+---
+
+## The Tidyverts family
+
+[**Tidyverts**](https://tidyverts.org) is a family of R packages for time series analysis and forecasting. It is the work of Rob Hyndman, professor of statistics at Monash University, and his team. The family is intended to be the next-generation replacement for the very popular `forecast` package, and is currently under active development. The purpose of this document is to provide a quick overview of the capabilities and features of Tidyverts.
+
+## Data manipulation and summaries
+
+Tidyverts is designed to integrate with the [Tidyverse](https://tidyverse.org), the de facto standard for data analytics workflows in R (the similarity in names is something of an in-joke). In particular, it defines a new data structure called a _tsibble_, which is an extended version of a tibble for working with time series. You can use all the standard dplyr/purrr verbs with tsibbles.
+
+Let's look at how to do some simple summaries. We'll use the `aus_retail` dataset, which contains retail turnover statistics by (Australian) state and industry, going back to 1982. This is part of the tsibbledata package, which contains several example time series datasets.
+
+```{r}
+library(dplyr)
+library(tsibbledata)
+library(tsibble)
+library(feasts)
+library(fable)
+
+slice(aus_retail, 1:6)
+```
+
+A tsibble includes two attributes to hold the time series information in the data:
+
+- An _index_, which is the time variable
+- Optionally, one or more _keys_, which identify separate time series within the dataset
+
+In the `aus_retail` dataset, the index is `Month`, with a range from April 1982 to December 2018. The keys are `State` and `Industry`, meaning that the data contains one time series for each combination of these variables.
+
+```{r}
+key_vars(aus_retail)
+
+index_var(aus_retail)
+
+range(aus_retail$Month)
+```
+
+One thing to be aware of when summarising a tsibble with `group_by/summarise` is that the index variable is automatically included in the groups. This lets you easily aggregate lower-level time series into higher-level ones. However, if you want to aggregate over the index itself, you have to convert to a _tibble_ first. Let's look at the total turnover by industry and by state. 
+
+```{r}
+aus_retail %>%
+    as_tibble() %>%
+    group_by(Industry) %>%
+    summarise(Turnover=sum(Turnover))
+
+aus_retail %>%
+    as_tibble() %>%
+    group_by(State) %>%
+    summarise(Turnover=sum(Turnover))
+```
+
+There aren't any surprises here, if you're familiar with Australian geography. NSW and Victoria are the largest states for retail turnover, closely followed by Queensland. The Northern Territory has the lowest turnover, with Tasmania second-lowest. Canberra (Australian Capital Territory) has higher turnover than Tasmania despite having a slightly smaller population; this is probably because it has higher average income, being the national capital.
+
+Other methods provided for grouping and summarising tsibbles include `index_by`, which lets you manipulate how the index variable is treated as a grouping variable; and `group_by_key`, which automatically groups by the key variables.
+
+## Plotting the data
+
+Let's have a look at the trends in the data over time. Tidyverts defines a `ggplot::autoplot` method for tsibbles, which is intended to give you a reasonable plot for a time series. When given a dataset with keys, it will produce a separate time plot for each key combination. For this dataset, there are about $8 \times 20 = 160$ combinations, which is too many to show on a single plot; instead, let's look at the state-level aggregation.
+
+```{r}
+library(ggplot2)
+
+aus_retail %>%
+    group_by(State) %>%  # we don't need to include Month in the groups
+    summarise(Turnover=sum(Turnover)) %>%
+    autoplot(Turnover) +
+        theme(legend.position="bottom") +
+        scale_color_brewer(palette="Dark2")
+```
+
+Observations about this plot:
+
+- There is a very obvious increasing trend over time, which is to be expected given general economic growth.
+- There is also very strong seasonality, with a spike in December reflecting Christmas spending.
+- Both trend and seasonality appear to be multiplicative.
+
+Repeating the plot on the log scale confirms the multiplicative nature of the data, and also highlights differences between states in their trends over the period.
+
+```{r}
+aus_retail %>%
+    group_by(State) %>%
+    summarise(Turnover=sum(Turnover)) %>%
+    autoplot(Turnover) +
+        theme(legend.position="bottom") +
+        scale_color_brewer(palette="Dark2") +
+        scale_y_log10() +
+        annotation_logticks()
+```
+
+We can also look at the corresponding plots for some individual industries, with a suitably defined helper function.
+
+```{r}
+industry_autologplot <- function(industry)
+{
+    aus_retail %>%
+        filter(Industry == industry) %>%
+        select(-Industry) %>%
+        autoplot(Turnover) +
+            theme(legend.position="bottom") +
+            scale_color_brewer(palette="Dark2") +
+            scale_y_log10() +
+            annotation_logticks() +
+            ggtitle(industry)
+}
+
+industry_autologplot("Food retailing")
+industry_autologplot("Cafes, restaurants and takeaway food services")
+industry_autologplot("Clothing, footwear and personal accessory retailing")
+industry_autologplot("Electrical and electronic goods retailing")
+```
+
+The Tidyverts framework defines a number of other functions to help with exploratory analysis, in the feasts package. For plotting, the `gg_subseries` function produces a seasonal subseries plot, which facets the time series by each season in the seasonal period:
+
+```{r}
+aus_retail %>%
+    filter(Industry == "Food retailing", State == "New South Wales") %>%
+    gg_season(Turnover, facet_period="10 years") +
+        theme(axis.text.x=element_blank(), legend.position="bottom") +
+        scale_y_log10() +
+        annotation_logticks() +
+        ggtitle("Food retailing/New South Wales")
+```
+
+The `gg_season` function produces a plot where the x-axis shows data from within each season. This plot type allows the underlying seasonal pattern to be seen more clearly, and can be useful in identifying years in which the pattern changes. Here, the blue and black lines are the average turnover and trend over time, within each month.
+
+```{r}
+aus_retail %>%
+    filter(Industry == "Food retailing", State == "New South Wales") %>%
+    gg_subseries(Turnover) +
+        theme(axis.text.x=element_blank()) +
+        scale_y_log10() +
+        annotation_logticks() +
+        ggtitle("Food retailing/New South Wales")
+```
+
+For this dataset though, these plots are probably less helpful because of the large number of years.
+

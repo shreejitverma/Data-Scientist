@@ -1,0 +1,252 @@
+---
+title: "Using Tidyverts with the Australian retail data: modelling"
+output: html_notebook
+---
+
+## Train models
+
+Having explored the retail data, let's fit some models to it. We'll use the first 25.5 years of data for model training, and the remaining 10 years for training.
+
+- `drift` is a simple random walk model incorporating a drift term.
+- `sdrift` is the seasonal counterpart to `drift`, ie the random walk is by season.
+- `ar` is an ARIMA model with all seasonal and nonseasonal terms chosen from the data.
+- `ets_auto` is an ETS model with the form of the components chosen from the data (either additive or multiplicative).
+- `ets_fixed` is an ETS model where the components are all additive, based on examining the plots in the previous notebook.
+
+In addition, a nice feature of the `model` function is that it can fit models in parallel by leveraging the future and future.apply packages. Here, we use the `multisession` plan to create a background cluster of R processes for this purpose.
+
+```{r}
+library(dplyr)
+library(tsibbledata)
+library(tsibble)
+library(feasts)
+library(fable)
+library(future)
+
+plan(multisession)
+
+aus_retail_tr <- aus_retail %>%
+    filter(Month <= yearmonth("2008 Dec"))
+aus_retail_vl <- aus_retail %>%
+    filter(Month > yearmonth("2008 Dec"))
+
+mods <- model(aus_retail_tr,
+    drift=NAIVE(log(Turnover) ~ drift()),
+    sdrift=SNAIVE(log(Turnover) ~ drift()),
+    ar=ARIMA(log(Turnover)),
+    ets_auto=ETS(log(Turnover)),
+    ets_fixed=ETS(log(Turnover) ~ error("A") + trend("A") + season("A"))
+)
+
+nrow(mods)
+```
+
+Note that there are 150 separate models for each of the above, corresponding to all observed combinations of state/territory and industry (not every industry is represented in each state). The ability to parallelise model training is thus very useful.
+
+Let's examine the resulting output, for one time series. The plotted output from `autoplot` includes the point forecasts along with the 80% and 95% prediction intervals, for each model. To compare these results to the actual turnover in the period, we pass the validation dataset to `autoplot` in the `data` argument. The actual turnover is given by the black line.
+
+```{r}
+library(ggplot2)
+
+fcasts <- forecast(mods, new_data=aus_retail_vl)
+
+fcasts %>%
+    filter(Industry == "Food retailing", State == "New South Wales") %>%
+    autoplot(data=aus_retail_vl) +
+        theme(legend.position="bottom")
+```
+
+The main feature of this plot is that the `drift` model is almost comically bad. Not only does it fails to capture the seasonal pattern in the data, but it also severely overestimates the growth in turnover in the validation period.
+
+We can redo the plot, but omitting this one model and using only the 80% prediction intervals:
+
+```{r}
+fcasts %>%
+    filter(Industry == "Food retailing", State == "New South Wales", .model != "drift") %>%
+    autoplot(data=aus_retail_vl, level=80) +
+        theme(legend.position="bottom")
+```
+
+This plot shows that, in fact, _all_ of the models are systematically overestimating the growth in turnover (although the actual growth is still mostly within the prediction intervals). To see whether this is limited to this particular time series, we can also aggregate up the forecasts to the state level and plot them. There is a wart to be aware of: some time series actually end before the validation period, so we need to exclude them from the aggregation to avoid distorting the results.
+
+```{r}
+state_vl <- aus_retail_vl %>%
+    group_by(State) %>%
+    summarise(Turnover=sum(Turnover))
+
+fcasts_state <- fcasts %>%
+    filter(Month > yearmonth("2008 Dec"), .model != "drift") %>%
+    group_by(State, .model) %>%
+    summarise(Turnover=sum(.mean)) %>%
+    bind_rows(state_vl) %>%
+    mutate(.model=ifelse(is.na(.model), ".response", .model))
+
+fcasts_state_plot <- function(state)
+{
+    fcasts_state %>%
+        filter(State == state) %>%
+        ungroup() %>%
+        update_tsibble(key=.model) %>%
+        autoplot(Turnover) +
+            theme(legend.position="bottom") +
+            scale_y_log10() +
+            annotation_logticks() +
+            ggtitle(state)
+}
+
+fcasts_state_plot("New South Wales")
+fcasts_state_plot("Victoria")
+fcasts_state_plot("Queensland")
+fcasts_state_plot("South Australia")
+fcasts_state_plot("Western Australia")
+fcasts_state_plot("Tasmania")
+fcasts_state_plot("Northern Territory")
+fcasts_state_plot("Australian Capital Territory")
+```
+
+This shows that all of the forecasts are systematically overestimating the trend. What's causing this? The reason is probably because of how we split the data into training and validation periods. The training data terminates at the end of 2008, which corresponds to the global financial crisis; conversely, the validation data starts at a point in which the economy is low and beginning to recover from the crisis.
+
+## Update models to 2013
+
+To test this hypothesis, let's refit the models, but this time with the training period extended to the end of 2013. The `drift` model is omitted as it is clearly inappropriate for the data.
+
+```{r}
+aus_retail_2013_tr <- aus_retail %>%
+    filter(Month <= yearmonth("2013 Dec"))
+aus_retail_2013_vl <- aus_retail %>%
+    filter(Month > yearmonth("2013 Dec"))
+
+mods_2013 <- model(aus_retail_2013_tr,
+    sdrift=SNAIVE(log(Turnover) ~ drift()),
+    ar=ARIMA(log(Turnover)),
+    ets_auto=ETS(log(Turnover)),
+    ets_fixed=ETS(log(Turnover) ~ error("A") + trend("A") + season("A"))
+)
+
+fcasts_2013 <- forecast(mods_2013, new_data=aus_retail_2013_vl)
+
+fcasts_state_2013 <- fcasts_2013 %>%
+    group_by(State, .model) %>%
+    summarise(Turnover=sum(.mean)) %>%
+    bind_rows(state_vl) %>%
+    mutate(.model=ifelse(is.na(.model), ".response", .model))
+
+fcasts_state_2013_plot <- function(state)
+{
+    fcasts_state_2013 %>%
+        filter(State == state) %>%
+        ungroup() %>%
+        update_tsibble(key=.model) %>%
+        autoplot(Turnover) +
+            theme(legend.position="bottom") +
+            scale_y_log10() +
+            annotation_logticks() +
+            ggtitle(state)
+}
+
+fcasts_state_2013_plot("New South Wales")
+fcasts_state_2013_plot("Victoria")
+fcasts_state_2013_plot("Queensland")
+fcasts_state_2013_plot("South Australia")
+fcasts_state_2013_plot("Western Australia")
+fcasts_state_2013_plot("Tasmania")
+fcasts_state_2013_plot("Northern Territory")
+fcasts_state_2013_plot("Australian Capital Territory")
+```
+
+The plots show much better agreement between forecasts and actuals, especially for the larger state (NSW and Victoria). Nevertheless, there is still substantial error for the smaller states. This is probably because these states were hit harder by the global recession and took longer to recover.
+
+
+## Measuring accuracy
+
+A variety of point estimate accuracy measures are provided in the fabletools package. In general, you should not put too much emphasis on such measures as they play down the uncertainty inherent in any statistical inference task, let alone forecasting; remember to look at the prediction intervals as well to guide you on whether a model is adequate. Also, it's better to treat these as _relative_ measures, to help us decide which of a number of competing models to use, rather than looking at the absolute accuracy.
+
+Nevertheless, let's examine some accuracy scores for the different model types. For this dataset, the MASE (mean absolute scaled error) and MAPE (mean absolute percentage error) measures are appropriate. MAPE is simple and easy to explain to a nontechnical audience, while MASE has better statistical properties.
+
+### Unaggregated accuracy
+
+The accuracy scores by state, and overall, are given below. These are calculated by obtaining the individual accuracy scores for each time series, and then averaging them.
+
+```{r}
+library(tidyr)
+
+aus_retail_agg <- aggregate_key(aus_retail, State*Industry, Turnover=sum(Turnover))
+acc <- accuracy(fcasts_2013, aus_retail_agg, measures=list(MASE=MASE, MAPE=MAPE))
+
+acc %>%
+    mutate(State=as.character(State)) %>%
+    group_by(State, .model) %>%
+    summarise(across(MASE:MAPE, mean)) %>%
+    pivot_wider(id_cols=State, names_from=.model, values_from=MASE:MAPE)
+
+acc %>%
+    group_by(.model) %>%
+    summarise(across(MASE:MAPE, mean)) %>%
+    pivot_wider(names_from=.model, values_from=MASE:MAPE)
+```
+
+### Aggregated accuracy
+
+A possibly undesirable feature of the measures above is that they treat all combinations of state and industry equally. In some scenarios this is reasonable; here, we might suppose that smaller states/industries in terms of turnover should be given less weight than larger ones. This is the implicit assumption when analysing the data by aggregating it to the state or industry level, for example.
+
+Here are the weighted/aggregated accuracy scores. The code is somewhat more involved, as for MASE we also need to obtain the suitable aggregated training series.
+
+```{r}
+fcasts_2013_wide <- fcasts_2013 %>%
+    as_tibble() %>%
+    pivot_wider(id_cols=c(State, Industry, .model, Month), names_from=.model, values_from=.mean) %>%
+    inner_join(aus_retail_2013_vl, by=c("State", "Industry", "Month"))
+
+fcasts_2013_wide %>%
+    group_by(State) %>%
+    group_modify(function(.x, .y)
+    {
+        traindata <- aus_retail_2013_tr %>%
+            filter(State == .y$State) %>%
+            summarise(Turnover=sum(Turnover))
+        summarise(.x, across(sdrift:ets_fixed, list(
+            MASE=function(x) MASE(x - .x$Turnover, traindata$Turnover, .period=12, d=FALSE, D=TRUE),
+            MAPE=function(x) MAPE(x - .x$Turnover, .x$Turnover)
+        )))
+    }) %>%
+    select(State, contains("MASE"), contains("MAPE"))
+
+fcasts_2013_wide %>%
+    group_modify(function(.x, .y)
+    {
+        traindata <- summarise(aus_retail_2013_tr, Turnover=sum(Turnover))
+        summarise(.x, across(sdrift:ets_fixed, list(
+            MASE=function(x) MASE(x - .x$Turnover, traindata$Turnover, .period=12, d=FALSE, D=TRUE),
+            MAPE=function(x) MAPE(x - .x$Turnover, .x$Turnover)
+        )))
+    }) %>%
+    select(contains("MASE"), contains("MAPE"))
+```
+
+This broadly confirms the patterns seen in the plots above. The `sdrift` model performs worst, which is unsurprising given that it is simplistic by design. The ETS models perform best, probably because this particular dataset exhibits very clear trends and seasonal patterns. The forecast accuracy is best for the bigger states (NSW and Victoria) and worst for the Northern Territory and Western Australia.
+
+## Comments
+
+### Risks of forecasting
+
+There is a particularly timely and important observation to make regarding this dataset. From above, we saw that updating the models to use the data up to 2013 gave better forecast accuracy, especially for NSW and Victoria. Assuming that we were only interested in these two states, what would happen if we were to use the models to obtain forecasts for 2020 and beyond? Despite the good results on past data, they would almost certainly be very wide of the mark. This is because even the best model could not possibly anticipate the massive global recession caused by the COVID-19 pandemic. (Of course, the same would apply for any subjective forecast based on expert knowledge, so this is not an endorsement of judgemental forecasting.)
+
+These results demonstrate the risks inherent in forecasting, especially when there is a strong trend. Even a trend that appears to be stable over time can change for reasons not captured in the data, resulting in systematic forecast errors. Any assessment of model performance should be interpreted in context, with the possibility of external shifts taken into account. Prediction standard intervals are better than relying on point forecasts, but these still assume that the training data contains shocks similar to those that will occur in the future: that is, they can deal with "known unknowns", but not "unknown unknowns".
+
+### Many models vs one model
+
+In this case study, the `aus_retail` dataset contained 150 separate time series, one for every combination of state and industry. Each of our models, like `ar` and `ets`, is actually a _family_ of models, one per time series. This so-called _many-models_ approach to forecasting can be contrasted to the _one model_ approach, where we fit a single model to the entire dataset, and use variables like state and industry as predictor variables.
+
+In general, the many-models approach often produces better results than using one model. The reason for this can be seen in the time plots of the individual states and industries: the trends, and seasonal patterns, vary considerably from one time series to the next. It is often difficult to capture this systematic variation in a single model.
+
+The tidyverts framework currently only supports the many-models approach, but work is in progress to support one-model as well.
+
+### Regression-based modelling
+
+Something that has not been attempted here is a regression-based approach. In the discussion of the forecast performance by state, it was mentioned that some states had been harder hit than others by the global financial crisis which affected the accuracy of the forecasts. It could be imagined that if we had suitable data on economic indicators---household income, unemployment, inflation, etc---we could use these as predictor variables in a regression model for retail turnover. This would allow us to capture the different trends by state, and thus generate more accurate forecasts.
+
+The main drawback of regression-based forecasting is that values for the predictor variables themselves must be available in the periods for which a forecast is required. Obtaining these values is often a difficult forecasting problem in its own right, and forecasting economic indicators in particular is notoriously hard. Hence we will not have gained anything.
+
+Nevertheless, in some circumstances a regression-based approach can be competitive with univariate forecasting. An example is retail demand at the individual-product level, where we have a large set of product features with which to model demand, and these features can reasonably be assumed to be known (or controllable) in the future. With enough data, machine learning algorithms such as gradient boosting or deep learning networks can be used to fit one large model to the entire dataset, and the predictions used for forecasting. Such models are beyond the scope of this case study.
+
+
